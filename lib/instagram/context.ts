@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db/client";
 
 export type InstagramContext =
   | { provider: "META"; accessToken: string }
+  // A Facebook Page: accessToken is the Page token, pageId the Page id.
+  | { provider: "FACEBOOK"; accessToken: string; pageId: string }
   | {
       provider: "ZERNIO";
       apiKey: string;
@@ -12,7 +14,7 @@ export type InstagramContext =
     };
 
 export type ProviderAccount = {
-  provider: "META" | "ZERNIO";
+  provider: "META" | "ZERNIO" | "FACEBOOK";
   workspaceId: string;
   zernioAccountId: string | null;
   instagramId: string;
@@ -31,6 +33,12 @@ export async function createInstagramContext(
   account: ProviderAccount,
   operationId?: string
 ): Promise<InstagramContext> {
+  if (account.provider === "FACEBOOK")
+    return {
+      provider: "FACEBOOK",
+      accessToken: decryptToken(account.accessToken),
+      pageId: account.instagramId,
+    };
   if (account.provider !== "ZERNIO")
     return { provider: "META", accessToken: decryptToken(account.accessToken) };
   if (!account.zernioAccountId)

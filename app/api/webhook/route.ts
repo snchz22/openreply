@@ -5,6 +5,7 @@ import {
   verifyWebhookSignature,
 } from "@/lib/meta/webhook";
 import { processInstagramWebhook } from "@/lib/queue/process-webhook";
+import { normalizeFacebookEvent } from "@/lib/facebook/normalize-event";
 
 
 export async function GET(request: NextRequest) {
@@ -62,6 +63,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Facebook Page events (post comments, Messenger) share this endpoint.
+    // They are mapped onto the Instagram payload shape and routed to Page
+    // accounts; Instagram events go through untouched.
+    const object = (payload as { object?: string } | null)?.object;
+    if (object === "page") {
+      const normalized = normalizeFacebookEvent(payload);
+      if (normalized)
+        await processInstagramWebhook({ payload: normalized, provider: 'FACEBOOK' });
+      return NextResponse.json({ success: true });
+    }
     await processInstagramWebhook({ payload: payload as Parameters<typeof parseCommentEvents>[0], provider: 'META' });
     return NextResponse.json({ success: true });
   } catch {

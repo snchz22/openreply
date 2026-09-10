@@ -33,6 +33,7 @@ OpenReply is built around Meta's official Instagram private replies. It does not
 ## Features
 
 - Keyword to DM. Match one or many keywords per post, whole-word or partial.
+- Facebook Pages. The same campaigns run on Page post comments, delivered as Messenger private replies. See [docs/facebook.md](docs/facebook.md).
 - Optional public reply. Post a visible comment reply on top of the DM.
 - DM and Story reply triggers. The same keywords can also fire on an inbound DM, which covers text replies to your Stories, since Instagram delivers those as DMs. That makes `Reply LINK to this Story` work with no post involved. Turn it on per campaign, and subscribe to the `messages` webhook field if you use your own Meta app. Zernio webhook registration is automatic.
 - Tracked links. Swap a link for a tracked redirect and see clicks and CTR per campaign.

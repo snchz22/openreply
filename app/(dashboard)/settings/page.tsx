@@ -19,7 +19,7 @@ interface SettingsData {
   } | null;
   instagramAccounts: Array<
     AccountOption & {
-      provider?: "META" | "ZERNIO";
+      provider?: "META" | "ZERNIO" | "FACEBOOK";
       tokenExpiresAt: string | null;
       webhookSubscribed: boolean;
     }
@@ -191,7 +191,7 @@ export default function SettingsPage() {
                     @{account.username}
                   </p>
                   <p className="mt-1 text-xs text-muted">
-                    {account.provider === "ZERNIO" ? "Connected via Zernio" : <>Token expires{" "}
+                    {account.provider === "ZERNIO" ? "Connected via Zernio" : account.provider === "FACEBOOK" ? "Facebook Page \u00b7 token does not expire" : <>Token expires{" "}
                     {account.tokenExpiresAt
                       ? new Date(account.tokenExpiresAt).toLocaleDateString()
                       : "not available"}</>}{" "}
@@ -218,6 +218,12 @@ export default function SettingsPage() {
             className="px-4 py-2 rounded text-sm font-medium transition-colors bg-accent text-white hover:bg-accent-hover"
           >
             Connect using your own Meta app
+          </a>
+          <a
+            href="/api/facebook/connect"
+            className="px-4 py-2 rounded text-sm font-medium transition-colors border border-border text-foreground hover:bg-surface"
+          >
+            Connect a Facebook Page
           </a>
         </div>
       </section>

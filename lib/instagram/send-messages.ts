@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import * as meta from "@/lib/meta/client";
+import * as fb from "@/lib/facebook/client";
 import {
   zernioRequest,
   ZernioApiError,
@@ -86,6 +87,8 @@ export async function sendPrivateReply({
   message: string;
   postId?: string;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendPrivateReply(context.accessToken, context.pageId, commentId, message);
   if (context.provider === "META")
     return meta.sendPrivateReply(
       context.accessToken,
@@ -113,6 +116,8 @@ export async function sendPrivateReplyWithButton({
   payload: string;
   postId?: string;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendPrivateReplyWithButton(context.accessToken, context.pageId, commentId, text, buttonTitle, payload);
   if (context.provider === "META")
     return meta.sendPrivateReplyWithButton(
       context.accessToken,
@@ -146,6 +151,8 @@ export async function sendDirectMessageWithButton({
   buttonTitle: string;
   payload: string;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendDirectMessageWithButton(context.accessToken, context.pageId, userId, text, buttonTitle, payload);
   if (context.provider === "META")
     return meta.sendDirectMessageWithButton(
       context.accessToken,
@@ -178,6 +185,8 @@ export async function sendPrivateReplyWithLinkButton({
   buttons: meta.LinkButton[];
   postId?: string;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendPrivateReplyWithLinkButton(context.accessToken, context.pageId, commentId, text, buttons);
   if (context.provider === "META")
     return meta.sendPrivateReplyWithLinkButton(
       context.accessToken,
@@ -206,6 +215,8 @@ export async function sendDirectMessage({
   userId: string;
   message: string;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendDirectMessage(context.accessToken, context.pageId, userId, message);
   if (context.provider === "META")
     return meta.sendDirectMessage(
       context.accessToken,
@@ -229,6 +240,8 @@ export async function sendDirectMessageWithLinkButton({
   text: string;
   buttons: meta.LinkButton[];
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendDirectMessageWithLinkButton(context.accessToken, context.pageId, userId, text, buttons);
   if (context.provider === "META")
     return meta.sendDirectMessageWithLinkButton(
       context.accessToken,
@@ -256,6 +269,8 @@ export async function sendCommentReply({
   message: string;
   postId?: string;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.sendCommentReply(context.accessToken, commentId, message);
   if (context.provider === "META")
     return meta.sendCommentReply(context.accessToken, commentId, message);
   const result = await zernioRequest<{ data: { commentId: string } }>({

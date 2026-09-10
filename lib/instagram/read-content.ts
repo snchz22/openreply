@@ -1,4 +1,5 @@
 import * as meta from "@/lib/meta/client";
+import * as fb from "@/lib/facebook/client";
 import { zernioRequest } from "@/lib/zernio/client";
 import type { InstagramContext } from "./context";
 
@@ -21,6 +22,8 @@ export async function getRecentMediaComments({
   sinceMs: number;
   max?: number;
 }): Promise<meta.InstagramComment[]> {
+  if (context.provider === "FACEBOOK")
+    return fb.getRecentPostComments(context.accessToken, mediaId, sinceMs, max);
   if (context.provider === "META")
     return meta.getRecentMediaComments(
       context.accessToken,
@@ -69,6 +72,8 @@ export async function getUserMedia({
   context: InstagramContext;
   limit?: number;
 }): Promise<meta.InstagramMedia[]> {
+  if (context.provider === "FACEBOOK")
+    return fb.getPagePosts(context.accessToken, context.pageId, limit);
   if (context.provider === "META")
     return meta.getUserMedia(context.accessToken, limit);
   const result = await zernioRequest<{
@@ -115,6 +120,8 @@ export async function getAllUserMedia({
   context: InstagramContext;
   max?: number;
 }) {
+  if (context.provider === "FACEBOOK")
+    return fb.getPagePosts(context.accessToken, context.pageId, max);
   return context.provider === "META"
     ? meta.getAllUserMedia(context.accessToken, max)
     : getUserMedia({ context, limit: max });
@@ -125,6 +132,8 @@ export async function getUserInfo({
 }: {
   context: InstagramContext;
 }): Promise<meta.InstagramUser> {
+  if (context.provider === "FACEBOOK")
+    return fb.getPageInfo(context.accessToken, context.pageId);
   if (context.provider === "META") return meta.getUserInfo(context.accessToken);
   const result = await zernioRequest<{
     accounts: {

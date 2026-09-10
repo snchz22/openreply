@@ -393,6 +393,7 @@ enum OperationalEventLevel {
 enum InstagramProvider {
   META
   ZERNIO
+  FACEBOOK
 }
 
 model ZernioConnection {

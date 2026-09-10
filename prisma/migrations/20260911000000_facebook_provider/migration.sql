@@ -1,0 +1,1 @@
+ALTER TYPE "InstagramProvider" ADD VALUE 'FACEBOOK';

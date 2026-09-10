@@ -9,6 +9,8 @@ export async function getUserFollowStatus({
   context: InstagramContext;
   recipientId: string;
 }): Promise<boolean | null> {
+  // Messenger exposes no "follows the Page" flag; null lets the caller fail open.
+  if (context.provider === "FACEBOOK") return null;
   if (context.provider === "META")
     return meta.getUserFollowStatus(context.accessToken, recipientId);
   try {
@@ -31,6 +33,7 @@ export async function getMediaInsights({
   mediaId: string;
   metrics: string[];
 }): Promise<meta.InstagramMediaInsights> {
+  if (context.provider === "FACEBOOK") return {};
   if (context.provider === "META")
     return meta.getMediaInsights(context.accessToken, mediaId, metrics);
   const result = await zernioRequest<{
@@ -76,7 +79,7 @@ export async function getFollowerCountSeries({
 }): Promise<meta.FollowerCountPoint[] | null> {
   if (context.provider === "META")
     return meta.getFollowerCountSeries(context.accessToken, igUserId);
-  return null;
+  return null; // Zernio and Facebook Pages: no daily series
 }
 
 export async function getZernioFollowerSnapshots(context: ZernioContext) {

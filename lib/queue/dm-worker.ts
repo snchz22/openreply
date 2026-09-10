@@ -593,8 +593,10 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
         context: accessToken,
         recipientId: commenterId,
       });
+      // Zernio and Facebook cannot always resolve follow status; prompt only on
+      // a definite "no" so a real follower is never trapped.
       sendFollowPrompt =
-        accessToken.provider === "ZERNIO"
+        accessToken.provider !== "META"
           ? alreadyFollows === false
           : alreadyFollows !== true;
     }
@@ -1237,7 +1239,7 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
         recipientId: senderId,
       });
       sendFollowPrompt =
-        accessToken.provider === "ZERNIO"
+        accessToken.provider !== "META"
           ? follows === false
           : follows !== true;
     }
