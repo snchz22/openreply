@@ -7,7 +7,9 @@ import { subscribePageToWebhooks } from "@/lib/facebook/client";
 import {
   exchangeFacebookCode,
   getLongLivedUserToken,
+  inspectUserToken,
   listUserPages,
+  rawUserAccounts,
 } from "@/lib/facebook/oauth";
 import { encryptToken, verifyOAuthState } from "@/lib/meta/oauth";
 import { canManageWorkspace } from "@/lib/workspace-access";
@@ -48,6 +50,28 @@ export async function GET(request: NextRequest) {
     const pages = await listUserPages(userToken);
 
     if (pages.length === 0) {
+      // An empty /me/accounts looks identical whether the user really manages
+      // no Pages or the token is missing a grant, so record what the token
+      // actually carries before sending them back with a one-word reason.
+      const [token, accounts] = await Promise.all([
+        inspectUserToken(userToken).catch((e: unknown) => ({
+          diagnosticError: e instanceof Error ? e.message : String(e),
+        })),
+        rawUserAccounts(userToken).catch((e: unknown) => ({
+          diagnosticError: e instanceof Error ? e.message : String(e),
+        })),
+      ]);
+      await prisma.operationalEvent
+        .create({
+          data: {
+            source: "SYSTEM",
+            level: "WARNING",
+            workspaceId: state.workspaceId,
+            message: "Facebook connect returned no Pages",
+            payload: { token, accounts } as never,
+          },
+        })
+        .catch(() => {});
       return NextResponse.redirect(`${baseUrl}/settings?facebook=no_pages`);
     }
 

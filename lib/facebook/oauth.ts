@@ -85,3 +85,29 @@ export async function listUserPages(userToken: string): Promise<FacebookPage[]> 
     accessToken: p.access_token,
   }));
 }
+
+/**
+ * Diagnostics for a connect that returned no Pages. `/me/accounts` answering
+ * with an empty list is indistinguishable from a permission problem at the
+ * call site, so capture what the token actually carries (granted scopes, the
+ * app and user it belongs to) alongside the raw edge response.
+ */
+export async function inspectUserToken(userToken: string): Promise<unknown> {
+  const url = new URL(`${facebookGraphBase()}/debug_token`);
+  url.searchParams.set("input_token", userToken);
+  url.searchParams.set(
+    "access_token",
+    `${requireEnv("FACEBOOK_APP_ID")}|${requireEnv("FACEBOOK_APP_SECRET")}`
+  );
+  const response = await fetch(url.toString());
+  return response.json();
+}
+
+export async function rawUserAccounts(userToken: string): Promise<unknown> {
+  const url = new URL(`${facebookGraphBase()}/me/accounts`);
+  url.searchParams.set("fields", "id,name,username,tasks");
+  url.searchParams.set("limit", "50");
+  url.searchParams.set("access_token", userToken);
+  const response = await fetch(url.toString());
+  return response.json();
+}
