@@ -23,7 +23,7 @@ Same app as Instagram. In the developer console:
 1. **App settings, Basic**: note the App ID (`FACEBOOK_APP_ID`) and App secret (`FACEBOOK_APP_SECRET`, already required for webhook signatures).
 2. **Facebook Login for Business, Settings**: add `https://<your-domain>/api/facebook/callback` to Valid OAuth Redirect URIs.
 3. **Webhooks**: on the **Page** object, set the same callback URL and verify token as Instagram, then subscribe `feed`, `messages`, `messaging_postbacks`, `message_reads`.
-4. **Permissions**: `pages_show_list`, `pages_manage_metadata`, `pages_read_engagement`, `pages_manage_engagement`, `pages_messaging`. Standard Access covers Pages administered by people who hold a role on the app; add the Page admin's Facebook account under App roles.
+4. **Permissions**: `pages_show_list`, `pages_manage_metadata`, `pages_read_engagement`, `pages_read_user_content`, `pages_manage_engagement`, `pages_messaging`. Standard Access covers Pages administered by people who hold a role on the app; add the Page admin's Facebook account under App roles.
 
 ## Environment
 
