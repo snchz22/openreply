@@ -87,6 +87,9 @@ export async function GET() {
         message: true,
         createdAt: true,
         resolvedAt: true,
+        // Without the payload the timeline says what went wrong but never why,
+        // which is the whole reason these events are written.
+        payload: true,
       },
     }),
   ]);
