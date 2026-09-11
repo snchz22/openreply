@@ -68,8 +68,67 @@ export interface FacebookPage {
   accessToken: string;
 }
 
-/** Pages the user manages, each with its own Page access token. */
+/**
+ * Page ids carried by a Login-for-Business token.
+ *
+ * These tokens are granular: every permission is bound to the exact Pages the
+ * user ticked during login, and those bindings are the only record of the
+ * selection. Exported for testing.
+ */
+export function pageIdsFromDebugToken(debug: unknown): string[] {
+  const scopes =
+    (
+      debug as {
+        data?: { granular_scopes?: Array<{ scope?: string; target_ids?: string[] }> };
+      }
+    )?.data?.granular_scopes ?? [];
+  const ids = new Set<string>();
+  for (const entry of scopes) {
+    for (const id of entry?.target_ids ?? []) ids.add(id);
+  }
+  return [...ids];
+}
+
+async function fetchPage(userToken: string, pageId: string): Promise<FacebookPage> {
+  const url = new URL(`${facebookGraphBase()}/${pageId}`);
+  url.searchParams.set("fields", "id,name,username,access_token");
+  url.searchParams.set("access_token", userToken);
+  const response = await fetch(url.toString());
+  const page = await handleResponse<{
+    id: string;
+    name: string;
+    username?: string;
+    access_token: string;
+  }>(response);
+  return {
+    id: page.id,
+    name: page.name,
+    ...(page.username ? { username: page.username } : {}),
+    accessToken: page.access_token,
+  };
+}
+
+/**
+ * Pages the user manages, each with its own Page access token.
+ *
+ * Login for Business returns a granular-scope token whose `/me/accounts` edge
+ * is empty by design, so the Pages are read out of the token itself and fetched
+ * one by one. The edge is still the right answer for a classic login, which
+ * carries no granular scopes, so it stays as the fallback.
+ */
 export async function listUserPages(userToken: string): Promise<FacebookPage[]> {
+  const granted = await inspectUserToken(userToken)
+    .then(pageIdsFromDebugToken)
+    .catch(() => [] as string[]);
+
+  if (granted.length > 0) {
+    const pages = await Promise.all(
+      granted.map((id) => fetchPage(userToken, id).catch(() => null))
+    );
+    const usable = pages.filter((page): page is FacebookPage => page !== null);
+    if (usable.length > 0) return usable;
+  }
+
   const url = new URL(`${facebookGraphBase()}/me/accounts`);
   url.searchParams.set("fields", "id,name,username,access_token");
   url.searchParams.set("limit", "50");
@@ -81,7 +140,7 @@ export async function listUserPages(userToken: string): Promise<FacebookPage[]> 
   return (data.data ?? []).map((p) => ({
     id: p.id,
     name: p.name,
-    username: p.username,
+    ...(p.username ? { username: p.username } : {}),
     accessToken: p.access_token,
   }));
 }
