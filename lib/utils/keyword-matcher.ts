@@ -158,16 +158,32 @@ export function matchKeywords(
     stripSpecialCharacters(normalizeArabicScript(commentText))
   ).toLowerCase();
 
-  if (!cleanedText) {
-    return { matched: false, matchedKeyword: null };
-  }
+  // No early return on an empty cleanedText: a comment that is nothing but
+  // symbols ("+") still has to reach the symbol-only keyword branch below.
 
   for (const keyword of keywords) {
     const cleanedKeyword = foldDiacritics(
       stripSpecialCharacters(normalizeArabicScript(keyword))
     ).toLowerCase();
 
-    if (!cleanedKeyword) continue;
+    if (!cleanedKeyword) {
+      // A keyword made only of symbols ("+", "++", "!!") is erased by
+      // stripSpecialCharacters, so it can never match through the normal path.
+      // Commenters really do type a bare "+" or "1" to claim a DM, so match
+      // symbol-only keywords on the raw comment: the trimmed comment IS the
+      // keyword, or the keyword stands alone between whitespace.
+      const rawKeyword = keyword.trim();
+      if (!rawKeyword) continue;
+      const rawComment = commentText.trim();
+      const escaped = rawKeyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const alone = new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`, "u");
+      // "++" / "+++" is the same claim typed harder.
+      const repeated = rawComment.replace(/\s+/g, "").split(rawKeyword).every((part) => part === "");
+      if (rawComment === rawKeyword || alone.test(rawComment) || repeated) {
+        return { matched: true, matchedKeyword: keyword };
+      }
+      continue;
+    }
 
     if (wholeWordMatch) {
       const escapedKeyword = cleanedKeyword.replace(
